@@ -8,10 +8,7 @@ import base64
 import io 
 
 MODELS_PATH = './models/'
-OUTPUT_PATH = './output/'
-
 BASE_MODEL = 'SRWNNbase.h5'
-
 srwnnModelPaht = MODELS_PATH +  BASE_MODEL
 
 app = Flask(__name__)
