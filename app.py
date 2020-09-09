@@ -36,7 +36,7 @@ def getModelPath(modelConfig):
 
 @app.route('/')
 def index():
-    return "Index Page"
+    return "Super.Resolution.Waifu.Neural.Network"
 
 @app.route('/generate', methods=['POST'])
 def gen():
