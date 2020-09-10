@@ -11,6 +11,13 @@ MODELS_PATH = './models/'
 BASE_MODEL = 'SRWNNbase.h5'
 srwnnModelPaht = MODELS_PATH +  BASE_MODEL
 
+denoise1ModelPaht = MODELS_PATH +  'SRWNNdeNoise1.h5'
+denoise2ModelPaht = MODELS_PATH +  'SRWNNdeNoise2.h5'
+denoise3ModelPaht = MODELS_PATH +  'SRWNNdeNoise3.h5'
+deblur1ModelPaht = MODELS_PATH +  'SRWNNdeBlur1.h5'
+deblur2ModelPaht = MODELS_PATH +  'SRWNNdeBlur1.h5'
+deblur3ModelPaht = MODELS_PATH +  'SRWNNdeBlur1.h5'
+
 app = Flask(__name__)
 
 def generate(imageInput, modelPath):
@@ -28,11 +35,15 @@ def generate(imageInput, modelPath):
     return genOutput[0, ...]
 
 def getModelPath(modelConfig):
-    if modelConfig == '0000':
-        print('model path: ', srwnnModelPaht)
-        return srwnnModelPaht
-    if modelConfig != '0000': 
-        return srwnnModelPaht 
+    if modelConfig == '0000' return srwnnModelPaht
+    if modelConfig == '0100' return denoise1ModelPaht #change to actual model for images
+    if modelConfig == '0010' return denoise1ModelPaht
+    if modelConfig == '0020' return denoise2ModelPaht
+    if modelConfig == '0030' return denoise3ModelPaht
+    if modelConfig == '0001' return deblur1ModelPaht
+    if modelConfig == '0002' return deblur2ModelPaht
+    if modelConfig == '0003' return deblur3ModelPaht
+    else return srwnnModelPaht 
 
 @app.route('/')
 def index():
