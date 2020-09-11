@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 import base64
 import io 
+import tensorflow_hub as hub
 
 MODELS_PATH = './models/'
 BASE_MODEL = 'SRWNNbase.h5'
@@ -34,6 +35,20 @@ def generate(imageInput, modelPath):
 
     return genOutput[0, ...]
 
+def esrganGenerator(imageInput):
+    generator = hub.load(MODELS_PATH + "esrgan-tf2_1")
+
+    imageInput = Image.open(imageInput.stream)
+    arrayInput = np.array(imageInput)
+    input = tf.cast(arrayInput, tf.float32)[...,:3]
+
+    image = tf.expand_dims(input, axis = 0)
+
+    genOutput = generator(image) 
+    genOutput = tf.cast(tf.clip_by_value(genOutput, 0, 255), tf.uint8)
+
+    return genOutput[0, ...]
+
 def getModelPath(modelConfig):
     if modelConfig == '0000' return srwnnModelPaht
     if modelConfig == '0100' return denoise1ModelPaht #change to actual model for images
@@ -59,10 +74,21 @@ def gen():
         modelConfig = payload['model']
         print('model config: ', modelConfig)
 
-        modelPathStr = getModelPath(modelConfig)
-
-        generatedImageArray = generate(image, modelPathStr)
-        generatedImage = Image.fromarray(np.uint8(((generatedImageArray+1)/2)*255), 'RGB')
+        if modelConfig == '1000':
+            ##add exception
+            generatedImageArray = esrganGenerator(image)
+            ###IF ESRGAN
+            generatedImage = Image.fromarray(np.uint8((generatedImageArray)), 'RGB')
+        
+        else:
+            modelPathStr = getModelPath(modelConfig)
+            ##add exeption
+            generatedImageArray = generate(image, modelPathStr)
+            ###IF NOT ESRGAN
+            generatedImage = Image.fromarray(np.uint8(((generatedImageArray+1)/2)*255), 'RGB')
+        
+        
+        
         buffer = io.BytesIO()
         generatedImage.save(buffer,format="png")
         imageBuffer = buffer.getvalue()                     
