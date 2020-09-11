@@ -21,6 +21,19 @@ deblur3ModelPaht = MODELS_PATH +  'SRWNNdeBlur1.h5'
 
 app = Flask(__name__)
 
+def validImage(image):
+    imageInput = Image.open(image.stream)
+    width, height = image.size
+    if width * height > 2000000:
+        return False
+    else:
+        return True
+
+def reshapeImage(image):
+    imageInput = Image.open(image.stream)
+    width, height = image.size
+
+
 def generate(imageInput, modelPath):
     generator = tf.keras.models.load_model(modelPath)
 
@@ -50,15 +63,15 @@ def esrganGenerator(imageInput):
     return genOutput[0, ...]
 
 def getModelPath(modelConfig):
-    if modelConfig == '0000' return srwnnModelPaht
-    if modelConfig == '0100' return denoise1ModelPaht #change to actual model for images
-    if modelConfig == '0010' return denoise1ModelPaht
-    if modelConfig == '0020' return denoise2ModelPaht
-    if modelConfig == '0030' return denoise3ModelPaht
-    if modelConfig == '0001' return deblur1ModelPaht
-    if modelConfig == '0002' return deblur2ModelPaht
-    if modelConfig == '0003' return deblur3ModelPaht
-    else return srwnnModelPaht 
+    if modelConfig == '0000': return srwnnModelPaht
+    if modelConfig == '0100': return denoise1ModelPaht #change to actual model for images
+    if modelConfig == '0010': return denoise1ModelPaht
+    if modelConfig == '0020': return denoise2ModelPaht
+    if modelConfig == '0030': return denoise3ModelPaht
+    if modelConfig == '0001': return deblur1ModelPaht
+    if modelConfig == '0002': return deblur2ModelPaht
+    if modelConfig == '0003': return deblur3ModelPaht
+    else: return srwnnModelPaht 
 
 @app.route('/')
 def index():
@@ -66,39 +79,46 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def gen():
-    data = {"success": False}
+    success = '0'
     if request.files.get("image"):
         image = request.files['image']
         
         payload = request.form.to_dict()
         modelConfig = payload['model']
-        print('model config: ', modelConfig)
+        #print('MODEL CONFI: ', modelConfig)
 
         if modelConfig == '1000':
-            ##add exception
-            generatedImageArray = esrganGenerator(image)
-            ###IF ESRGAN
-            generatedImage = Image.fromarray(np.uint8((generatedImageArray)), 'RGB')
+            #print('USING ESRGAN')
+            try:
+                generatedImageArray = esrganGenerator(image)
+                generatedImage = Image.fromarray(np.uint8((generatedImageArray)), 'RGB')
+                buffer = io.BytesIO()
+                generatedImage.save(buffer,format="png")
+                imageBuffer = buffer.getvalue()                     
+                encodedImage = base64.b64encode(imageBuffer)
+                success = '1'
+            except:
+                encodedImage = ''
+                success = '0'
         
         else:
-            modelPathStr = getModelPath(modelConfig)
-            ##add exeption
-            generatedImageArray = generate(image, modelPathStr)
-            ###IF NOT ESRGAN
-            generatedImage = Image.fromarray(np.uint8(((generatedImageArray+1)/2)*255), 'RGB')
+            #print('USING SRWNN')
+            try:
+                modelPathStr = getModelPath(modelConfig)
+                generatedImageArray = generate(image, modelPathStr)
+                generatedImage = Image.fromarray(np.uint8(((generatedImageArray+1)/2)*255), 'RGB')
+                buffer = io.BytesIO()
+                generatedImage.save(buffer,format="png")
+                imageBuffer = buffer.getvalue()                     
+                encodedImage = base64.b64encode(imageBuffer)
+                success = '1'
+            except:
+                encodedImage = ''
+                success = '0'
         
-        
-        
-        buffer = io.BytesIO()
-        generatedImage.save(buffer,format="png")
-        imageBuffer = buffer.getvalue()                     
-        
-        encodedImage = base64.b64encode(imageBuffer)
         img_str = encodedImage
 
-        data["success"] = True
-
-    return flask.jsonify({'msg': data, 'img': str(img_str) })
+    return flask.jsonify({'msg': str(success), 'img': str(img_str) })
     
 
 
