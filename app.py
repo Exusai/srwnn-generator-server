@@ -22,7 +22,7 @@ deblur3ModelPaht = MODELS_PATH +  'SRWNNdeBlur1.h5'
 app = Flask(__name__)
 
 def validImage(image):
-    imageInput = Image.open(image.stream)
+    image = Image.open(image.stream)
     width, height = image.size
     if width * height > 2000000:
         return False
@@ -30,14 +30,24 @@ def validImage(image):
         return True
 
 def reshapeImage(image):
-    imageInput = Image.open(image.stream)
+    image = Image.open(image.stream)
     width, height = image.size
+    newWidth, newHeight = int(round(width*.5)), int(round(height*.5)) 
+    newImage = image.resize((newWidth, newHeight))
+    #print('IMAGE RESHAPED TO', newWidth, newHeight)
+    return newImage
 
 
 def generate(imageInput, modelPath):
     generator = tf.keras.models.load_model(modelPath)
 
-    imageInput = Image.open(imageInput.stream)
+    isValidImage = validImage(imageInput)
+    if isValidImage:
+        imageInput = Image.open(imageInput.stream)
+    else:
+        #print('SRWNN reshapedimage')
+        imageInput = reshapeImage(imageInput)
+    
     arrayInput = np.array(imageInput)
 
     input = tf.cast(arrayInput, tf.float32)[...,:3]
@@ -51,7 +61,14 @@ def generate(imageInput, modelPath):
 def esrganGenerator(imageInput):
     generator = hub.load(MODELS_PATH + "esrgan-tf2_1")
 
-    imageInput = Image.open(imageInput.stream)
+    isValidImage = validImage(imageInput)
+    if isValidImage:
+        imageInput = Image.open(imageInput.stream)
+    else:
+        #print('ESRGAN reshapedimage')
+        imageInput = reshapeImage(imageInput)
+
+    #imageInput = Image.open(imageInput.stream)
     arrayInput = np.array(imageInput)
     input = tf.cast(arrayInput, tf.float32)[...,:3]
 
