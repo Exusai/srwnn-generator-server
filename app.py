@@ -24,7 +24,14 @@ app = Flask(__name__)
 def validImage(image):
     image = Image.open(image.stream)
     width, height = image.size
-    if width * height > 2000000:
+    if width * height > 1000000:
+        return False
+    else:
+        return True
+
+def validateResie(image):
+    width, height = image.size
+    if width * height > 1000000:
         return False
     else:
         return True
@@ -46,7 +53,11 @@ def generate(imageInput, modelPath):
         imageInput = Image.open(imageInput.stream)
     else:
         #print('SRWNN reshapedimage')
-        imageInput = reshapeImage(imageInput)
+        while isValidImage == False:
+            imageInput = reshapeImage(imageInput)
+            isValidImage = validateResie(imageInput)
+            if isValidImage == True:
+                break
     
     arrayInput = np.array(imageInput)
 
