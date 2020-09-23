@@ -39,7 +39,7 @@ def validateResie(image):
 def reshapeImage(image):
     image = Image.open(image.stream)
     width, height = image.size
-    newWidth, newHeight = int(round(width*.5)), int(round(height*.5)) 
+    newWidth, newHeight = int(round(width*.80)), int(round(height*.80)) 
     newImage = image.resize((newWidth, newHeight))
     #print('IMAGE RESHAPED TO', newWidth, newHeight)
     return newImage
